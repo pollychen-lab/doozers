@@ -12,9 +12,9 @@
 <input type="hidden" name="code" value="{{ code }}">
 <div class="approval-prompt">{{ prompt|safe }}</div>
 <div class="approval-buttons">
-<button type="submit" name="answer" value="yes" class="button-primary">Allow</button>
-<button type="submit" name="answer" value="yes!">Allow for this session</button>
-<button type="submit" name="answer" value="no">Deny</button>
+<button type="submit" name="answer" value="yes" class="button-primary" aria-label="Allow {{ tool }}">Allow</button>
+<button type="submit" name="answer" value="yes!" aria-label="Allow for this session {{ tool }}">Allow for this session</button>
+<button type="submit" name="answer" value="no" aria-label="Deny {{ tool }}">Deny</button>
 </div>
 </form>
 {%- endmatch -%}

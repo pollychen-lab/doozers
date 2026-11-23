@@ -142,6 +142,7 @@ pub(super) fn body(text: &str, media: &[&MediaRef]) -> String {
 struct ApprovalFragment<'a> {
     chat: &'a str,
     code: &'a str,
+    tool: &'a str,
     prompt: &'a str,
     csrf: Option<&'a str>,
     answer: Option<&'a str>,
@@ -150,10 +151,17 @@ struct ApprovalFragment<'a> {
 /// An approval prompt with its buttons (`prompt` already rendered). `csrf` adds the form field
 /// for browsers without JavaScript; fragments sent over the event stream have none and rely on
 /// the page's `hx-headers`.
-pub(super) fn approval(chat: &str, code: &str, prompt: &str, csrf: Option<&str>) -> String {
+pub(super) fn approval(
+    chat: &str,
+    code: &str,
+    tool: &str,
+    prompt: &str,
+    csrf: Option<&str>,
+) -> String {
     fragment(&ApprovalFragment {
         chat,
         code,
+        tool,
         prompt,
         csrf,
         answer: None,
@@ -165,6 +173,7 @@ pub(super) fn approval_answered(code: &str, prompt: &str, answer: &str) -> Strin
     fragment(&ApprovalFragment {
         chat: "",
         code,
+        tool: "",
         prompt,
         csrf: None,
         answer: Some(answer),
@@ -688,7 +697,7 @@ mod tests {
         let cut = message("m-1", Who::Assistant, "", State::CutOff);
         assert!(cut.contains("cut-off") && cut.contains("Stopped"), "{cut}");
 
-        let form = approval("c1", "4821", "<p>Allow?</p>", Some("tok"));
+        let form = approval("c1", "4821", "shell__exec", "<p>Allow?</p>", Some("tok"));
         assert!(form.starts_with(r#"<form id="a-4821""#), "{form}");
         assert!(form.contains(r#"hx-post="/chats/c1/approvals""#), "{form}");
         assert!(form.contains(r#"name="csrf" value="tok""#), "{form}");
@@ -698,7 +707,26 @@ mod tests {
                 "{form}"
             );
         }
-        assert!(!approval("c1", "4821", "", None).contains("csrf"));
+        for (label, value) in [
+            ("Allow shell__exec", "yes"),
+            ("Allow for this session shell__exec", "yes!"),
+            ("Deny shell__exec", "no"),
+        ] {
+            let button = form
+                .split("<button")
+                .find(|button| button.contains(&format!(r#"value="{value}""#)))
+                .expect("approval button");
+            assert!(
+                button.contains(&format!(r#"aria-label="{label}""#)),
+                "{button}"
+            );
+        }
+        let escaped = approval("c1", "4821", "tool\"<unsafe>", "", None);
+        assert!(
+            escaped.contains(r#"aria-label="Allow tool&#34;&#60;unsafe&#62;""#),
+            "{escaped}"
+        );
+        assert!(!approval("c1", "4821", "shell__exec", "", None).contains("csrf"));
         let done = approval_answered("4821", "<p>Allow?</p>", "Denied");
         assert!(done.starts_with(r#"<div id="a-4821" class="approval answered">"#));
         assert!(

@@ -590,6 +590,7 @@ async fn chat_page(State(app): State<WebApp>, user: WebUser, Path(chat): Path<St
                 None => render::approval(
                     chat.as_str(),
                     &approval.code,
+                    &approval.tool,
                     &approval.prompt,
                     Some(&user.csrf),
                 ),

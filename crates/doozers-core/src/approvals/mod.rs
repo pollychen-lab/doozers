@@ -86,13 +86,18 @@ pub enum ApprovalOutcome {
 /// Shows approval prompts in a conversation.
 #[async_trait]
 pub trait ApprovalPresenter: Send + Sync {
-    /// Shows `markdown`, the prompt of approval `code`, in `reply`'s conversation.
+    /// Shows `markdown`, the prompt of approval `code` for `tool`, in `reply`'s conversation.
     ///
     /// # Errors
     ///
     /// The prompt couldn't be shown; the request is then denied at once.
-    async fn present(&self, reply: &Reply, code: &str, markdown: &str)
-    -> doozers_types::Result<()>;
+    async fn present(
+        &self,
+        reply: &Reply,
+        code: &str,
+        tool: &str,
+        markdown: &str,
+    ) -> doozers_types::Result<()>;
 
     /// Approval `code`, shown in `reply`'s conversation, ended with `outcome`. Must not block.
     fn resolved(&self, reply: &Reply, code: &str, outcome: ApprovalOutcome);
@@ -108,6 +113,7 @@ impl ApprovalPresenter for TextPresenter {
         &self,
         reply: &Reply,
         _code: &str,
+        _tool: &str,
         markdown: &str,
     ) -> doozers_types::Result<()> {
         reply.send(markdown).await.map(drop)
@@ -150,15 +156,16 @@ impl ApprovalPresenter for ChannelPresenter {
         &self,
         reply: &Reply,
         code: &str,
+        tool: &str,
         markdown: &str,
     ) -> doozers_types::Result<()> {
         #[cfg(feature = "channel-web")]
         if let Some(web) = self.web(reply) {
             return web
-                .send_approval(reply.conversation(), code, markdown)
+                .send_approval(reply.conversation(), code, tool, markdown)
                 .map(drop);
         }
-        TextPresenter.present(reply, code, markdown).await
+        TextPresenter.present(reply, code, tool, markdown).await
     }
 
     fn resolved(&self, reply: &Reply, code: &str, outcome: ApprovalOutcome) {
@@ -805,7 +812,7 @@ impl TurnApprovals {
                 None => self
                     .board
                     .presenter
-                    .present(&target.reply, &code, &markdown)
+                    .present(&target.reply, &code, tool, &markdown)
                     .await
                     .map_err(|error| error.to_string()),
             };

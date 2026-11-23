@@ -88,9 +88,10 @@ impl ApprovalPresenter for Recorder {
         &self,
         reply: &Reply,
         code: &str,
+        tool: &str,
         markdown: &str,
     ) -> doozers_types::Result<()> {
-        TextPresenter.present(reply, code, markdown).await
+        TextPresenter.present(reply, code, tool, markdown).await
     }
 
     fn resolved(&self, _reply: &Reply, code: &str, outcome: ApprovalOutcome) {
@@ -595,13 +596,13 @@ async fn the_channel_presenter_gives_web_chats_buttons_and_others_text() {
     let reply = Reply::for_session(&chat, registry.clone()).unwrap();
     // Shown with buttons: the web chat has the prompt to retire.
     presenter
-        .present(&reply, "4821", "Allow it?")
+        .present(&reply, "4821", "shell__exec", "Allow it?")
         .await
         .unwrap();
     assert!(web.resolve_approval(&id, "4821", ApprovalOutcome::Denied));
     // `resolved` retires it.
     presenter
-        .present(&reply, "1093", "Allow it?")
+        .present(&reply, "1093", "shell__exec", "Allow it?")
         .await
         .unwrap();
     presenter.resolved(&reply, "1093", ApprovalOutcome::Expired);
@@ -612,7 +613,7 @@ async fn the_channel_presenter_gives_web_chats_buttons_and_others_text() {
     other.channel = Some("irc".to_owned());
     let reply = Reply::for_session(&other, registry.clone()).unwrap();
     let error = presenter
-        .present(&reply, "5555", "Allow it?")
+        .present(&reply, "5555", "shell__exec", "Allow it?")
         .await
         .unwrap_err();
     assert!(error.to_string().contains("not available"), "{error}");

@@ -930,11 +930,12 @@ async fn approval_buttons_answer_with_the_code() {
     let env = env().await;
     let mut sse = Sse::open(&env, &format!("/chats/{}/events", chat()), &[]).await;
     assert!(matches!(
-        env.channel.send_approval(&chat(), "bad code", "x"),
+        env.channel
+            .send_approval(&chat(), "bad code", "shell__exec", "x"),
         Err(Error::InvalidRequest(_))
     ));
     env.channel
-        .send_approval(&chat(), "4821", "Allow `shell__exec`?")
+        .send_approval(&chat(), "4821", "shell__exec", "Allow `shell__exec`?")
         .unwrap();
     let prompt = sse.next().await;
     assert!(
@@ -947,11 +948,23 @@ async fn approval_buttons_answer_with_the_code() {
         "{}",
         prompt.data
     );
+    for label in [
+        "Allow shell__exec",
+        "Allow for this session shell__exec",
+        "Deny shell__exec",
+    ] {
+        assert!(
+            prompt.data.contains(&format!(r#"aria-label="{label}""#)),
+            "{}",
+            prompt.data
+        );
+    }
     assert!(!prompt.data.contains("csrf"), "{}", prompt.data);
 
     // A page load shows the pending prompt, with the CSRF field for plain form posts.
     let page = body_text(env.get(&format!("/chats/{}", chat())).await).await;
     assert!(page.contains(r#"<form id="a-4821""#), "{page}");
+    assert!(page.contains(r#"aria-label="Deny shell__exec""#), "{page}");
     assert!(page.contains(r#"name="csrf" value="csrf-token-for-tests""#));
 
     let path = format!("/chats/{}/approvals", chat());
@@ -1021,7 +1034,9 @@ async fn approval_buttons_answer_with_the_code() {
     );
 
     // A prompt that ends without a button (a timeout, a typed reply) is retired the same way.
-    env.channel.send_approval(&chat(), "99", "Again?").unwrap();
+    env.channel
+        .send_approval(&chat(), "99", "shell__exec", "Again?")
+        .unwrap();
     sse.next().await;
     assert!(
         env.channel

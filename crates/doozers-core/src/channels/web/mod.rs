@@ -393,6 +393,7 @@ impl WebChannel {
         &self,
         chat: &ConversationId,
         code: &str,
+        tool: &str,
         markdown: &str,
     ) -> Result<MessageId> {
         if !is_approval_code(code) {
@@ -401,10 +402,11 @@ impl WebChannel {
             )));
         }
         let prompt = render::markdown(markdown);
-        let html = render::approval(chat.as_str(), code, &prompt, None);
+        let html = render::approval(chat.as_str(), code, tool, &prompt, None);
         self.hubs.get(chat).approval_add(
             hub::Approval {
                 code: code.to_owned(),
+                tool: tool.to_owned(),
                 prompt,
                 sent: None,
             },

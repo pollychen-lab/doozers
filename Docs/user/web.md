@@ -292,6 +292,8 @@ When an agent asks before running a tool, the chat shows the request with three 
 - **Allow for this session**, so the same tool needs no more approval in this session
 - **Deny**
 
+For screen readers, each button name also includes the tool it applies to.
+
 The buttons send [the same replies](commands.md) you could type, and typing them works too.
 
 ## Scheduled jobs

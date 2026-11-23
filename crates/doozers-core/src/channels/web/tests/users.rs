@@ -110,7 +110,7 @@ async fn another_users_chat_is_not_found_on_every_chat_route() {
     chat_of(env, &identity::owner(), &theirs, "the owner secret plan").await;
     // The owner's chat has a prompt waiting for an answer and is archived apart from the list.
     env.channel
-        .send_approval(&theirs, "4821", "Run `rm -rf /`?")
+        .send_approval(&theirs, "4821", "shell__exec", "Run `rm -rf /`?")
         .unwrap();
     let archived = chat_n(0x22);
     chat_of(
@@ -354,7 +354,7 @@ async fn only_the_chats_user_can_answer_its_approval_prompt() {
     let chat = chat_n(0x66);
     chat_of(env, &identity::owner(), &chat, "deploy it").await;
     env.channel
-        .send_approval(&chat, "9d2", "Run `deploy`?")
+        .send_approval(&chat, "9d2", "ci__deploy", "Run `deploy`?")
         .unwrap();
 
     // No other user answers it, an admin included (an admin's role is no part of the rule).
@@ -410,7 +410,7 @@ async fn a_deleted_chat_leaves_nothing_for_the_next_user_of_its_id_to_replay() {
     let chat = chat_n(0x88);
     chat_of(env, &identity::owner(), &chat, "the deleted secret").await;
     env.channel
-        .send_approval(&chat, "5150", "Run `the deleted secret`?")
+        .send_approval(&chat, "5150", "shell__exec", "Run `the deleted secret`?")
         .unwrap();
 
     let response = owner_browser

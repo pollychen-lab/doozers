@@ -45,6 +45,8 @@ pub(super) struct Event {
 pub(super) struct Approval {
     /// The short code.
     pub code: String,
+    /// The tool the user is approving.
+    pub tool: String,
     /// The prompt, rendered.
     pub prompt: String,
     /// What a button sent (`Sent: yes`), shown instead of the buttons; `None` while unanswered.
@@ -439,6 +441,7 @@ mod tests {
     fn approval(code: &str) -> Approval {
         Approval {
             code: code.into(),
+            tool: "shell__exec".into(),
             prompt: "<p>ok?</p>".into(),
             sent: None,
         }

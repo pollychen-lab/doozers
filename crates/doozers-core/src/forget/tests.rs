@@ -57,7 +57,7 @@ struct Silent;
 
 #[async_trait::async_trait]
 impl ApprovalPresenter for Silent {
-    async fn present(&self, _: &Reply, _: &str, _: &str) -> doozers_types::Result<()> {
+    async fn present(&self, _: &Reply, _: &str, _: &str, _: &str) -> doozers_types::Result<()> {
         Ok(())
     }
 
